@@ -2,6 +2,7 @@
 # BUILD STAGE
 #
 FROM maven:3.6.0-jdk-11-slim AS build
+RUN mkdir /root/.m2
 COPY /root/.m2 /root/.m2
 COPY src /usr/src/app/src  
 COPY pom.xml /usr/src/app
