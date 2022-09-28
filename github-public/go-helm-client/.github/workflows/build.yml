@@ -1,0 +1,48 @@
+name: Compile & Test
+
+on: [push, pull_request]
+jobs:
+  codegen-verify:
+    name: Verify code generation
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.17
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - uses: actions/checkout@v2
+
+      - name: Install and run mockgen
+        run: |
+          set -x
+          apt-get -y update && apt-get -y install git
+          cd /
+          go get -u github.com/golang/mock/mockgen@v1.6.0
+          cd -
+          go env
+          go generate ./...
+          git diff | cat
+          git status --porcelain=v1
+          test $(git status --porcelain=v1 | wc -l) -eq 0
+        env:
+          GO111MODULE: on
+
+  build:
+    name: Run tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.17', '1.16' ]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Run unit tests
+        run: go test ./...
